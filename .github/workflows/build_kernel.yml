@@ -1,4 +1,4 @@
-name: Build Android Kernel (KSU + RKSU)
+name: Build A32 Vampire Kernel (SukiSU + RKSU)
 
 on:
   workflow_dispatch:
@@ -9,63 +9,76 @@ jobs:
     steps:
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
+        with:
+          repository: valerynx/vampire_samsung_a32
+          fetch-depth: 1
 
-      - name: Install Build Dependencies
+      - name: Install Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y bc build-essential flex bison libssl-dev libelf-dev \
-          cpio execstack libncurses5-dev git python3 python2
+          cpio execstack libncurses5-dev git python3 python2 wget curl
 
       - name: Setup Zyc Clang 14
         run: |
-          mkdir clang
-          cd clang
-          wget https://github.com/ZyCromerZ/Clang/releases/download/14.0.6-20220904-release/Clang-14.0.6-20220904.tar.gz
-          tar -xf Clang-14.0.6-20220904.tar.gz
-          echo "$(pwd)/bin" >> $GITHUB_PATH
+          mkdir zyc-clang
+          cd zyc-clang
+          wget https://github.com/EmanuelCN/zyc_clang-14/archive/refs/heads/main.zip
+          unzip main.zip
+          # Add the bin directory to path (adjusting for the repo structure)
+          echo "$(pwd)/zyc_clang-14-main/bin" >> $GITHUB_PATH
+          cd ..
 
-      - name: Integrate KernelSU Ultra (Susfs)
+      - name: Setup SukiSU Ultra
         run: |
-          # Automated Susfs/KernelSU Ultra setup
-          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
-          # Add extra Ultra/Susfs patches here if specific files are provided in your repo
+          curl -LSs 'https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh' | bash -s builtin
 
-      - name: Manual Hook RKSU
+      - name: Apply RKSU Manual Hook
         run: |
-          # Manual hooking for RKSU (Simplified example of adding hooks)
-          # Note: In a real scenario, you would apply rksu.patch or use sed
-          git clone https://github.com/rsuntk/RKSU rksu_src
-          cp -r rksu_src/kernel/* kernel/
-          # Example of manual hooking into fs/exec.c or relevant kernel files
-          sed -i '/search_binary_handler(bprm);/i \    extern int rksu_handle_execve(struct linux_binprm *bprm);\n    rksu_handle_execve(bprm);' fs/exec.c
+          wget https://raw.githubusercontent.com/rksuorg/kernel_patches/refs/heads/master/manual_hook/kernel-4.14.patch
+          patch -p1 < kernel-4.14.patch || echo "RKSU Patch had some offsets, checking manual application..."
+
+      - name: Apply Sys_Reboot Hook
+        run: |
+          wget https://raw.githubusercontent.com/valerynx/action/refs/heads/main/sys_reboot.diff
+          patch -p1 < sys_reboot.diff || echo "Reboot patch failed, check compatibility."
 
       - name: Configure and Enforce Defconfig
         run: |
           # Use your specific defconfig
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- O=out a32_manual_ksu_defconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- a32_manual_ksu_defconfig
           
-          # Force-enable required configs for KSU/RKSU
-          scripts/config --file out/.config -e CONFIG_KSU
-          scripts/config --file out/.config -e CONFIG_OVERLAY_FS
-          scripts/config --file out/.config -e CONFIG_KPROBES
-          scripts/config --file out/.config -e CONFIG_RETPOLINE
-          # RKSU specific enforce
-          scripts/config --file out/.config -e CONFIG_RKSU
+          # Force enforcement of KSU and RKSU configurations
+          scripts/config -e CONFIG_KSU
+          scripts/config -e CONFIG_KSU_SUSFS
+          scripts/config -e CONFIG_RKSU
+          scripts/config -e CONFIG_RKSU_MANUAL_HOOK
+          scripts/config -e CONFIG_OVERLAY_FS
+          scripts/config -e CONFIG_KPROBES
           
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- O=out olddefconfig
+          # Finalize config
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
 
       - name: Build Kernel
         run: |
           make -j$(nproc --all) \
-               O=out \
                ARCH=arm64 \
                CC=clang \
                CLANG_TRIPLE=aarch64-linux-gnu- \
                CROSS_COMPILE=aarch64-linux-gnu- \
-               CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+               CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+               LD=ld.lld \
+               AR=llvm-ar \
+               NM=llvm-nm \
+               OBJCOPY=llvm-objcopy \
+               OBJDUMP=llvm-objdump \
+               STRIP=llvm-strip
 
-      - name: Upload Kernel Image
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Image-a32-KSU-RKSU
-          path: out/arch/arm64/boot/Image
+          name: Kernel-A32-SukiSU-RKSU
+          path: |
+            arch/arm64/boot/Image
+            arch/arm64/boot/Image.gz-dtb
+            arch/arm64/boot/dtbo.img
