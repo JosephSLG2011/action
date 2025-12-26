@@ -23,8 +23,8 @@ jobs:
         run: |
           mkdir zyc-clang
           cd zyc-clang
-          wget https://github.com/EmanuelCN/zyc_clang-14/archive/refs/heads/main.zip
-          unzip main.zip
+          wget https://github.com/EmanuelCN/zyc_clang-14/archive/refs/heads/master.zip
+          unzip master.zip
           # Add the bin directory to path (adjusting for the repo structure)
           echo "$(pwd)/zyc_clang-14-main/bin" >> $GITHUB_PATH
           cd ..
