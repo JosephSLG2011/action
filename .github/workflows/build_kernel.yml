@@ -99,19 +99,77 @@ jobs:
 
       - name: Build Kernel
         run: |
-          make -j$(nproc --all) \
-               ARCH=arm64 \
-               CC=clang \
-               CLANG_TRIPLE=aarch64-linux-gnu- \
-               CROSS_COMPILE=aarch64-linux-gnu- \
-               CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-               LD=ld.lld \
-               AR=llvm-ar \
-               NM=llvm-nm \
-               OBJCOPY=llvm-objcopy \
-               OBJDUMP=llvm-objdump \
-               STRIP=llvm-strip
+          # 1. Ensure output directory exists
+          mkdir -p out
 
+          # 2. Define Toolchain path clearly
+          TC_DIR="$HOME/zyc-clang/bin"
+          
+          # 3. Run the Build using a cleaner argument passing method
+          # Note: We use double quotes to prevent the '3' error from shell misinterpretation
+          make O=out \
+               ARCH=arm64 \
+               CC="$TC_DIR/clang" \
+               LD="$TC_DIR/ld.lld" \
+               AR="$TC_DIR/llvm-ar" \
+               NM="$TC_DIR/llvm-nm" \
+               OBJCOPY="$TC_DIR/llvm-objcopy" \
+               OBJDUMP="$TC_DIR/llvm-objdump" \
+               STRIP="$TC_DIR/llvm-strip" \
+               READELF="$TC_DIR/llvm-readelf" \
+               CLANG_TRIPLE=aarch64-linux-gnu- \
+               CROSS_COMPILE="$TC_DIR/aarch64-linux-gnu-" \
+               CROSS_COMPILE_ARM32="$TC_DIR/arm-linux-gnueabi-" \
+               KCFLAGS="-w -pipe -O3" \
+               KCPPFLAGS="-O3" \
+               CONFIG_SECTION_MISMATCH_WARN_ONLY=y \
+               -j$(nproc --all) a32_k+e_defconfig
+
+          # 4. Apply KSU/RKSU Configs to the generated .config in 'out'
+          scripts/config --file out/.config -e CONFIG_KSU
+          scripts/config --file out/.config -e CONFIG_KSU_SUSFS
+          scripts/config --file out/.config -e CONFIG_RKSU
+          scripts/config --file out/.config -e CONFIG_RKSU_MANUAL_HOOK
+          
+          # 5. Build the actual kernel
+          make O=out \
+               ARCH=arm64 \
+               CC="$TC_DIR/clang" \
+               LD="$TC_DIR/ld.lld" \
+               AR="$TC_DIR/llvm-ar" \
+               NM="$TC_DIR/llvm-nm" \
+               OBJCOPY="$TC_DIR/llvm-objcopy" \
+               OBJDUMP="$TC_DIR/llvm-objdump" \
+               STRIP="$TC_DIR/llvm-strip" \
+               READELF="$TC_DIR/llvm-readelf" \
+               CLANG_TRIPLE=aarch64-linux-gnu- \
+               CROSS_COMPILE="$TC_DIR/aarch64-linux-gnu-" \
+               CROSS_COMPILE_ARM32="$TC_DIR/arm-linux-gnueabi-" \
+               KCFLAGS="-w -pipe -O3" \
+               KCPPFLAGS="-O3" \
+               CONFIG_SECTION_MISMATCH_WARN_ONLY=y \
+               -j$(nproc --all) olddefconfig
+
+          make O=out \
+               ARCH=arm64 \
+               CC="$TC_DIR/clang" \
+               LD="$TC_DIR/ld.lld" \
+               AR="$TC_DIR/llvm-ar" \
+               NM="$TC_DIR/llvm-nm" \
+               OBJCOPY="$TC_DIR/llvm-objcopy" \
+               OBJDUMP="$TC_DIR/llvm-objdump" \
+               STRIP="$TC_DIR/llvm-strip" \
+               READELF="$TC_DIR/llvm-readelf" \
+               CLANG_TRIPLE=aarch64-linux-gnu- \
+               CROSS_COMPILE="$TC_DIR/aarch64-linux-gnu-" \
+               CROSS_COMPILE_ARM32="$TC_DIR/arm-linux-gnueabi-" \
+               KCFLAGS="-w -pipe -O3" \
+               KCPPFLAGS="-O3" \
+               CONFIG_SECTION_MISMATCH_WARN_ONLY=y \
+               -j$(nproc --all)
+
+          # 6. Set variables for following steps
+          echo "KERNEL_VERSION=$(make -C out ARCH=arm64 kernelversion)" >> $GITHUB_ENV
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
