@@ -10,7 +10,7 @@ jobs:
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
         with:
-          repository: valerynx/vampire_samsung_a32
+          repository: valerynx/kernel/tree/Vampire
           fetch-depth: 1
 
       - name: Install Dependencies
