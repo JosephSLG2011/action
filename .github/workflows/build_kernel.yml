@@ -10,7 +10,7 @@ jobs:
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
         with:
-          repository: valerynx/kernel/tree/Vampire
+          repository: JosephSLG2011/Algo
           fetch-depth: 1
 
       - name: Install Dependencies
