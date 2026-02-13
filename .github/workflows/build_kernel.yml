@@ -53,8 +53,7 @@ jobs:
                 CONFIG_SECTION_MISMATCH_WARN_ONLY=y"
 
           # 1. Configure
-          make $MAKE_ARGS prepare
-          make $MAKE_ARGS a32_k+e_defconfig
+          make O=out a32_k+e_defconfig
           
           # 2. Force KSU/RKSU configs
           scripts/config --file out/.config -e CONFIG_KSU
