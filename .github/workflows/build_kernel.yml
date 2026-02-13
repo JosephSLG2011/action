@@ -63,7 +63,7 @@ jobs:
           
           # 3. Build
           make O=out olddefconfig
-          make -j$(nproc --all) $MAKE_ARGS
+          make -j$(nproc --all) O=out
           
           echo "KERNEL_VERSION=$(make -C out kernelversion)" >> $GITHUB_ENV
       - name: Setup SukiSU Ultra
