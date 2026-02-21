@@ -10,7 +10,7 @@ jobs:
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
         with:
-          repository: JoseohSLG2011/Something
+          repository: JosephSLG2011/Something
           fetch-depth: 1
 
       - name: Install Dependencies
