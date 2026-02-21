@@ -66,7 +66,7 @@ jobs:
           
           # 3. Build
           make O=out olddefconfig
-          ./build_kernel.sh
+          ./build_kernel.sh $MAKE_ARGS
           
           echo "KERNEL_VERSION=$(make -C out kernelversion)" >> $GITHUB_ENV
       - name: Setup SukiSU Ultra
