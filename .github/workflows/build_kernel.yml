@@ -10,7 +10,7 @@ jobs:
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
         with:
-          repository: valerynx/vampire_samsung_a32
+          repository: JoseohSLG2011/Something
           fetch-depth: 1
 
       - name: Install Dependencies
@@ -53,17 +53,18 @@ jobs:
                 CONFIG_SECTION_MISMATCH_WARN_ONLY=y"
 
           # 1. Configure
-          make $MAKE_ARGS a32_k+e_defconfig
+          make $MAKE_ARGS a32_defconfig
           
           # 2. Force KSU/RKSU configs
           scripts/config --file out/.config -e CONFIG_KSU
           scripts/config --file out/.config -e CONFIG_KSU_SUSFS
           scripts/config --file out/.config -e CONFIG_RKSU
           scripts/config --file out/.config -e CONFIG_RKSU_MANUAL_HOOK
-          
+          sed -i 's/CONFIG_STACKPROTECTOR_STRONG=y/# CONFIG_STACKPROTECTOR_STRONG is not set/' out/.config
+          echo "CONFIG_STACKPROTECTOR_NONE=y" >> out/.config
           # 3. Build
           make $MAKE_ARGS olddefconfig
-          make -j$(nproc --all) $MAKE_ARGS
+          ./build_kernel.sh
           
           echo "KERNEL_VERSION=$(make -C out kernelversion)" >> $GITHUB_ENV
       - name: Setup SukiSU Ultra
@@ -143,3 +144,4 @@ jobs:
           name: vampire@ncatt
           path: |
             arch/arm64/boot/Image
+pp
