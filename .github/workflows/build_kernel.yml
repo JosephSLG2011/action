@@ -147,4 +147,3 @@ jobs:
           name: vampire@ncatt
           path: |
             arch/arm64/boot/Image
-pp
