@@ -26,6 +26,10 @@ jobs:
             # Move all binaries from extracted folder to $HOME/zyc-clang/bin
             chmod +x $HOME/zyc-clang/bin/*
 
+      - name: Crear enlace simbólico para clang
+        run: |
+          mkdir -p toolchain/clang/host/linux-x86/
+          ln -sf $HOME/zyc-clang toolchain/clang/host/linux-x86/clang-r383902
       - name: Build Kernel
         env:
           # Define the absolute path to your toolchain
