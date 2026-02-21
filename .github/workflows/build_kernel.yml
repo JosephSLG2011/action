@@ -123,7 +123,7 @@ jobs:
 
           # 3. Generate Config
           echo "--- Generating Config ---"
-          make O=out a32_k+e_defconfig
+          make O=out a32_defconfig
 
           # 4. Inject KSU/RKSU
           echo "--- Patching .config ---"
@@ -131,11 +131,12 @@ jobs:
           ./scripts/config --file out/.config -e CONFIG_KSU_SUSFS
           ./scripts/config --file out/.config -e CONFIG_RKSU
           ./scripts/config --file out/.config -e CONFIG_RKSU_MANUAL_HOOK
-          
+          sed -i 's/CONFIG_STACKPROTECTOR_STRONG=y/# CONFIG_STACKPROTECTOR_STRONG is not set/' out/.config
+          echo "CONFIG_STACKPROTECTOR_NONE=y" >> out/.config
           # 5. Build the Kernel
           echo "--- Starting Build ---"
           make O=out -j$(nproc --all) olddefconfig
-          make O=out -j$(nproc --all)
+          ./build_kernel.sh
 
           # 6. Set Version for Telegram
           echo "KERNEL_VERSION=$(make -C out ARCH=arm64 kernelversion)" >> $GITHUB_ENV
