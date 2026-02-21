@@ -133,6 +133,7 @@ jobs:
           ./scripts/config --file out/.config -e CONFIG_RKSU_MANUAL_HOOK
           sed -i 's/CONFIG_STACKPROTECTOR_STRONG=y/# CONFIG_STACKPROTECTOR_STRONG is not set/' out/.config
           echo "CONFIG_STACKPROTECTOR_NONE=y" >> out/.config
+          
           # 5. Build the Kernel
           echo "--- Starting Build ---"
           make O=out -j$(nproc --all) olddefconfig
