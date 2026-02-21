@@ -21,8 +21,8 @@ jobs:
       - name: Setup Clang 15.0.7 toolchain
         run: |
             mkdir -p $HOME/zyc-clang/bin
-            wget -O $HOME/zyc-clang/Clang-15.0.7.tar.xz https://github.com/ZyCromerZ/Clang/releases/download/15.0.7-20260208-release/Clang-15.0.7-20260208.tar.gz
-            tar -xf $HOME/zyc-clang/Clang-15.0.7.tar.xz -C $HOME/zyc-clang/
+            wget -O $HOME/zyc-clang/Clang-15.0.7.tar.gz https://github.com/ZyCromerZ/Clang/releases/download/15.0.7-20260208-release/Clang-15.0.7-20260208.tar.gz
+            tar -xzf $HOME/zyc-clang/Clang-15.0.7.tar.gz -C $HOME/zyc-clang/
             # Move all binaries from extracted folder to $HOME/zyc-clang/bin
             chmod +x $HOME/zyc-clang/bin/*
 
