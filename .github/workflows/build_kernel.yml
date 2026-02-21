@@ -18,15 +18,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential libncurses-dev flex bison bc git cpio unzip python3 python3-pip xz-utils libssl-dev
 
-      - name: Setup Zyc Clang 14
+      - name: Setup Clang 15.0.7 toolchain
         run: |
-          mkdir -p $HOME/zyc-clang
-          cd $HOME/zyc-clang
-          wget https://github.com/EmanuelCN/zyc_clang-14/archive/refs/heads/master.zip
-          unzip master.zip
-          # Move files so the 'bin' folder is exactly at $HOME/zyc-clang/bin
-          mv zyc_clang-14-master/* . || mv zyc_clang-14-main/* .
-          chmod +x bin/*
+            mkdir -p $HOME/zyc-clang/bin
+            wget -O $HOME/zyc-clang/Clang-15.0.7.tar.xz https://github.com/ZyCromerZ/Clang/releases/download/15.0.7-20260208-release/Clang-15.0.7.tar.xz
+            tar -xf $HOME/zyc-clang/Clang-15.0.7.tar.xz -C $HOME/zyc-clang/
+            # Move all binaries from extracted folder to $HOME/zyc-clang/bin
+            mv $HOME/zyc-clang/Clang-15.0.7/bin/* $HOME/zyc-clang/bin/
+            chmod +x $HOME/zyc-clang/bin/*
 
       - name: Build Kernel
         env:
